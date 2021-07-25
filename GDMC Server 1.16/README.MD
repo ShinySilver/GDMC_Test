@@ -2,7 +2,7 @@
 Java (version?)
 Either a copy of Minecraft to view to world, or a software
 
-#Install
+# Install
 Make sure you have Java installed.
 Download BuildTool here: https://hub.spigotmc.org/jenkins/job/BuildTools/ Move it to a temporary folder.
 Then run "java -jar BuildTool.jar --rev 1.16.5" to compile the latest version of spigot for 1.16.5. If it doesn't work, there is a website that offer precompiled jar: https://getbukkit.org/download/spigot
