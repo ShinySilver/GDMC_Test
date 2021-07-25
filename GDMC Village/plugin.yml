@@ -1,0 +1,15 @@
+name: Village
+main: com.amberstonedream.play.Village
+version: 1.0
+api-version: 1.16
+commands:
+    village-gen:
+        description: Generate a village
+        usage: /village-gen x0 y0 z0 x1 y1 z1 or /village-gen player x_width z_height
+        aliases: [vgen, village]
+        permission: bbox.admin
+permissions:
+    bbox.admin:
+        description: Allows running the main ui command.
+        default: op
+        
