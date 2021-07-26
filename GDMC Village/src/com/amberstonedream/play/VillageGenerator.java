@@ -1,7 +1,8 @@
 package com.amberstonedream.play;
 
 import org.bukkit.World;
-
+import org.bukkit.command.CommandSender;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 public class VillageGenerator extends Generator {
@@ -12,23 +13,43 @@ public class VillageGenerator extends Generator {
 	private int[][] heightMap;
 	private boolean[][] treeMap, waterMap;
 
-	public VillageGenerator(World w, int x0, int z0, int x1, int z1) {
-		super(w, x0, z0, x1, z1);
+	public VillageGenerator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
+		super(w, s, x0, z0, x1, z1);
 
 		heightMap = new int[xw][zw];
 		slopeMap = new int[2][xw][zw];
 		treeMap = new boolean[xw][zw];
 		waterMap = new boolean[xw][zw];
-
-		computeHeightMap();
-		computeSlopeMap();
-		computeTreeMap();
-		computeWaterMap();
 	}
 
 	@Override
 	protected void generate() {
 
+		s.sendMessage("Generating HeightMap...");
+		computeHeightMap();
+
+		s.sendMessage("Generating SlopeMap...");
+		computeSlopeMap();
+
+		s.sendMessage("Generating TreeMap...");
+		computeTreeMap();
+
+		s.sendMessage("Generating WaterMap...");
+		computeWaterMap();
+
+		s.sendMessage("Generating Terrain...");
+		Material m;
+		for (int x = 0; x<xw; x++) {
+			for (int z = 0; z<zw; z++) {
+				if (waterMap[x][z]) {
+					m = Material.BLUE_STAINED_GLASS;
+				} else {
+					m = Material.WHITE_STAINED_GLASS;
+				}
+				setBlock(x, 100, z, m);
+			}
+		}
+		this.done();
 	}
 
 	private int getGround(int x, int z) {
@@ -96,6 +117,7 @@ public class VillageGenerator extends Generator {
 	}
 
 	private void computeSlopeMap() {
+		/*
 		int[][] tmp1, tmp2;
 		tmp1 = Convolution.convolution2DPadded(heightMap, xw, zw, createKernel(KERNEL_SIZE, 1), KERNEL_SIZE, 1);
 		tmp2 = Convolution.convolution2DPadded(heightMap, xw, zw, createKernel(1, KERNEL_SIZE), 1, KERNEL_SIZE);
@@ -104,7 +126,7 @@ public class VillageGenerator extends Generator {
 				slopeMap[x][z][0] = tmp1[x][z];
 				slopeMap[x][z][1] = tmp2[x][z];
 			}
-		}
+		}*/
 	}
 
 	private void computeTreeMap() {

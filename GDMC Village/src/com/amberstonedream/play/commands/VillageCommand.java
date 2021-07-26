@@ -10,7 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import com.amberstonedream.play.Village;
+import com.amberstonedream.play.VillageGenerator;
 
 public class VillageCommand implements CommandExecutor, TabCompleter {
 
@@ -30,7 +30,7 @@ public class VillageCommand implements CommandExecutor, TabCompleter {
 				sender.sendMessage("Either \"" + args[1] + "\" or \"" + args[2] + "\" is not a valid integer.");
 				return true;
 			}
-			Village.startGeneration(p.getWorld(), p.getLocation().getBlockX() - x_width / 2,
+			new VillageGenerator(p.getWorld(), sender, p.getLocation().getBlockX() - x_width / 2,
 					p.getLocation().getBlockZ() - z_width / 2, p.getLocation().getBlockX() + x_width / 2,
 					p.getLocation().getBlockZ() + z_width / 2);
 			return true;

@@ -2,9 +2,11 @@ package com.amberstonedream.play;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public abstract class Generator extends BukkitRunnable {
@@ -13,6 +15,7 @@ public abstract class Generator extends BukkitRunnable {
 	protected int x0, z0, xw, zw;
 	private Boolean done = false;
 	private ChunkSnapshot[][] work;
+	protected CommandSender s;
 
 	private class ScheduledBlock {
 		int x, y, z;
@@ -28,23 +31,37 @@ public abstract class Generator extends BukkitRunnable {
 
 	ConcurrentLinkedQueue<ScheduledBlock> fifo = new ConcurrentLinkedQueue<>();
 
-	public Generator(World w, int x0, int z0, int x1, int z1) {
+	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
+		this.s = s;
 		this.x0 = Math.min(x0, x1);
 		this.z0 = Math.min(z0, z1);
 		x1 = Math.max(x0, x1);
 		z1 = Math.max(z0, z1);
-
 		xw = x1 - x0;
 		zw = z1 - z0;
-		work = new ChunkSnapshot[xw / 16 + 1][zw / 16 + 1];
-		for (int x = 0; x < xw / 16 + 1; x += 1) {
-			for (int z = 0; z < zw / 16 + 1; z += 1) {
-				work[x][z] = w.getChunkAt(x * 16 + x0, z * 16 + z0).getChunkSnapshot();
+
+		Bukkit.getScheduler().runTaskAsynchronously(Village.getInstance(), new Runnable() {
+			@Override
+			public void run() {
+				s.sendMessage("Creating a copy of the working zone...");
+				work = new ChunkSnapshot[xw / 16 + 1][zw / 16 + 1];
+				for (int x = 0; x < xw / 16 + 1; x += 1) {
+					for (int z = 0; z < zw / 16 + 1; z += 1) {
+						work[x][z] = w.getChunkAt(x * 16 + x0, z * 16 + z0).getChunkSnapshot();
+					}
+				}
+
+				runTaskTimer(Village.getInstance(), 1, 1);
+				Bukkit.getScheduler().runTaskAsynchronously(Village.getInstance(), new Runnable() {
+					@Override
+					public void run() {
+						generate();
+					}
+				});
+
 			}
-		}
-		
-		this.runTaskAsynchronously(Village.getInstance());
+		});
 	}
 
 	/**
@@ -64,7 +81,11 @@ public abstract class Generator extends BukkitRunnable {
 				if (i > 1000)
 					return;
 			}
+			if (i != 0) {
+				s.sendMessage("Placing " + i + " blocks/tick");
+			}
 			if (this.done) {
+				s.sendMessage("Done!");
 				this.cancel();
 			}
 		}
@@ -84,24 +105,25 @@ public abstract class Generator extends BukkitRunnable {
 
 	protected Material getBlock(int x, int y, int z) {
 		if (x >= 0 && z >= 0 && x < xw && z < zw) {
-			return work[(x + x0 % 16) / 16][(z + z0 % 16) / 16].getBlockType(((x + x0) % 16), y, ((z + z0) % 16));
+			return work[(x + x0 % 16) / 16][(z + (z0 % 16 + 16) % 16) / 16].getBlockType((((x + x0) % 16 + 16) % 16), y,
+					(((z + z0) % 16 + 16) % 16));
 		}
 		return Material.AIR;
 	}
 
 	protected Material getTopBlock(int x, int z) {
 		if (x >= 0 && z >= 0 && x < xw && z < zw) {
-			ChunkSnapshot s = work[(x + x0 % 16) / 16][(z + z0 % 16) / 16];
-			int y = s.getHighestBlockYAt(((x + x0) % 16), ((z + z0) % 16));
-			return s.getBlockType(((x + x0) % 16), y, ((z + z0) % 16));
+			ChunkSnapshot s = work[(x + (x0 % 16 + 16) % 16) / 16][(z + (z0 % 16 + 16) % 16) / 16];
+			int y = s.getHighestBlockYAt((((x + x0) % 16 + 16) % 16), (((z + z0) % 16 + 16) % 16));
+			return s.getBlockType((((x + x0) % 16 + 16) % 16), y, (((z + z0) % 16 + 16) % 16));
 		}
 		return Material.AIR;
 	}
 
 	protected int getTopBlockY(int x, int z) {
 		if (x >= 0 && z >= 0 && x < xw && z < zw) {
-			ChunkSnapshot s = work[(x + x0 % 16) / 16][(z + z0 % 16) / 16];
-			return s.getHighestBlockYAt(((x + x0) % 16), ((z + z0) % 16));
+			ChunkSnapshot s = work[(x + (x0 % 16 + 16) % 16) / 16][(z + (z0 % 16 + 16) % 16) / 16];
+			return s.getHighestBlockYAt((((x + x0) % 16 + 16) % 16), (((z + z0) % 16 + 16) % 16));
 		}
 		return 0;
 	}

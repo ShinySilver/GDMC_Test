@@ -1,6 +1,5 @@
 package com.amberstonedream.play;
 
-import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,10 +33,5 @@ public class Village extends JavaPlugin implements Listener {
 
 	public static Village getInstance() {
 		return instance;
-	}
-
-	public static void startGeneration(World world, int i, int j, int k, int l) {
-		// TODO Auto-generated method stub
-		
 	}
 }
