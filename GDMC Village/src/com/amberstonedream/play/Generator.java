@@ -48,6 +48,7 @@ public abstract class Generator extends BukkitRunnable {
 				work = new ChunkSnapshot[xw / 16 + 1][zw / 16 + 1];
 				for (int x = 0; x < xw / 16 + 1; x += 1) {
 					for (int z = 0; z < zw / 16 + 1; z += 1) {
+						s.sendMessage("Chunk " + (x*(xw/16) +z) +"/" + (xw*zw/16/16));
 						work[x][z] = w.getChunkAt(x * 16 + x0, z * 16 + z0).getChunkSnapshot();
 					}
 				}
