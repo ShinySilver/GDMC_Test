@@ -27,7 +27,7 @@ public abstract class Generator {
 		treeMap = new boolean[xw][zw];
 		waterMap = new boolean[xw][zw];
 
-		Village plugin = Village.getInstance();
+		VillagePlugin plugin = VillagePlugin.getInstance();
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {

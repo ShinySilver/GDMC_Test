@@ -32,7 +32,7 @@ public class BlockChangeBuffer extends BukkitRunnable {
 		this.s = s;
 		fifo = new ConcurrentLinkedQueue<>();
 
-		runTaskTimer(Village.getInstance(), 1, 10);
+		runTaskTimer(VillagePlugin.getInstance(), 1, 10);
 	}
 
 	@Override

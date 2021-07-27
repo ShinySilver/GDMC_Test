@@ -6,8 +6,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.amberstonedream.play.commands.VillageCommand;
 
-public class Village extends JavaPlugin implements Listener {
-	private static Village instance;
+public class VillagePlugin extends JavaPlugin implements Listener {
+	private static VillagePlugin instance;
 
 	/**
 	 * {@inheritDoc}
@@ -31,7 +31,7 @@ public class Village extends JavaPlugin implements Listener {
 		instance = null;
 	}
 
-	public static Village getInstance() {
+	public static VillagePlugin getInstance() {
 		return instance;
 	}
 }
