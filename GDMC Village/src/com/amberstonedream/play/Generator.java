@@ -1,6 +1,7 @@
 package com.amberstonedream.play;
 
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.command.CommandSender;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -12,7 +13,7 @@ public abstract class Generator {
 	protected int x0, z0, xw, zw;
 
 	private int[][][] slopeMap;
-	private int[][] heightMap;
+	private int[][] heightMap, biomeMap;
 	private boolean[][] treeMap, waterMap;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
@@ -23,6 +24,7 @@ public abstract class Generator {
 		this.zw = Math.max(z0, z1) - z0;
 
 		heightMap = new int[xw][zw];
+		biomeMap = new int[xw][zw];
 		slopeMap = new int[2][xw][zw];
 		treeMap = new boolean[xw][zw];
 		waterMap = new boolean[xw][zw];
@@ -60,6 +62,13 @@ public abstract class Generator {
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
+				s.sendMessage("Generating BiomeMap...");
+				computeBiomeMap();
+			}
+		}, 5);
+		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+			@Override
+			public void run() {
 				Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
 					@Override
 					public void run() {
@@ -70,11 +79,11 @@ public abstract class Generator {
 					}
 				});
 			}
-		}, 5);
+		}, 6);
 	}
 
-	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][][] slopeMap, int[][] heightMap, boolean[][] treeMap,
-			boolean[][] waterMap);
+	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][][] slopeMap, int[][] heightMap,
+			boolean[][] treeMap, boolean[][] waterMap);
 
 	private int getGround(int x, int z) {
 		Material m;
@@ -104,8 +113,8 @@ public abstract class Generator {
 
 	private void computeHeightMap() {
 		for (int x = 0; x < xw; x++) {
-			for (int y = 0; y < zw; y++) {
-				heightMap[x][y] = getGround(x, y);
+			for (int z = 0; z < zw; z++) {
+				heightMap[x][z] = getGround(x0 + x, z0 + z);
 			}
 		}
 	}
@@ -119,16 +128,33 @@ public abstract class Generator {
 	 * / 2) { kernel[1][j] = 0; } else if (j < h / 2) { kernel[1][j] = -1; } else if
 	 * (j > h / 2) { kernel[1][j] = 1; } } return kernel; } return null; }
 	 */
+	/*
+	 * int[][] tmp1, tmp2; tmp1 = Convolution.convolution2DPadded(heightMap, xw, zw,
+	 * createKernel(KERNEL_SIZE, 1), KERNEL_SIZE, 1); tmp2 =
+	 * Convolution.convolution2DPadded(heightMap, xw, zw, createKernel(1,
+	 * KERNEL_SIZE), 1, KERNEL_SIZE); for (int x = 0; x < xw; x++) { for (int z = 0;
+	 * z < zw; z++) { slopeMap[x][z][0] = tmp1[x][z]; slopeMap[x][z][1] =
+	 * tmp2[x][z]; } }
+	 */
 
 	private void computeSlopeMap() {
-		/*
-		 * int[][] tmp1, tmp2; tmp1 = Convolution.convolution2DPadded(heightMap, xw, zw,
-		 * createKernel(KERNEL_SIZE, 1), KERNEL_SIZE, 1); tmp2 =
-		 * Convolution.convolution2DPadded(heightMap, xw, zw, createKernel(1,
-		 * KERNEL_SIZE), 1, KERNEL_SIZE); for (int x = 0; x < xw; x++) { for (int z = 0;
-		 * z < zw; z++) { slopeMap[x][z][0] = tmp1[x][z]; slopeMap[x][z][1] =
-		 * tmp2[x][z]; } }
-		 */
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				slopeMap[x][z] = maxHeightDiff(x, z);
+			}
+		}
+
+	}
+
+	private int[] maxHeightDiff(int x, int z) {
+		int max = 0;
+		int min = 255;
+		for (int i = x - 3; i < x + 4; i++) {
+			for (int j = z - 3; j < z + 4; j++) {
+				break;
+			}
+		}
+		return null;
 	}
 
 	private void computeTreeMap() {
@@ -143,6 +169,14 @@ public abstract class Generator {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
 				waterMap[x][z] = isWater(x0 + x, z0 + z);
+			}
+		}
+	}
+
+	private void computeBiomeMap() {
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				biomeMap[x][z] = w.getBlockAt(x0 + x, 60, z0 + z).getBiome().ordinal();
 			}
 		}
 	}

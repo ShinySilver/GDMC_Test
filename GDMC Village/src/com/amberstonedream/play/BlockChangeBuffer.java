@@ -44,14 +44,14 @@ public class BlockChangeBuffer extends BukkitRunnable {
 			while ((b = fifo.poll()) != null) {
 				w.getBlockAt(b.x, b.y, b.z).setType(b.m, false);
 				i++;
-				if (i == 500)
+				if (i == 5000)
 					break;
 			}
 			if (i != 0) {
 				s.sendMessage("Placing " + i + " blocks/tick");
 			}
 			blockCount += i;
-			if (i != 500 && this.done) {
+			if (i != 5000 && this.done) {
 				s.sendMessage(
 						"Done! Placed a total of of " + blockCount + "blocks over a duration of " + tickCount + " ticks.");
 				this.cancel();

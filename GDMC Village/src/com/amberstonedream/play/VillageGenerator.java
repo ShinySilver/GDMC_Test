@@ -25,7 +25,7 @@ public class VillageGenerator extends Generator {
 				} else {
 					m = Material.WHITE_STAINED_GLASS;
 				}
-				b.setBlock(x0 + x, 100, z0 + z, m);
+				b.setBlock(x0 + x, heightMap[x][z]+50, z0 + z, m);
 			}
 		}
 	}
