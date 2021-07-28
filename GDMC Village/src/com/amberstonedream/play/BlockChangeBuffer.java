@@ -2,6 +2,7 @@ package com.amberstonedream.play;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -27,14 +28,19 @@ public class BlockChangeBuffer extends BukkitRunnable {
 	private ConcurrentLinkedQueue<ScheduledBlock> fifo;
 	private int blockCount = 0;
 	private long startTime;
+	private boolean shouldRestoreAutosave;
+
+	private static final int BATCH_SIZE = 500;
 
 	public BlockChangeBuffer(World w, CommandSender s) {
 		this.w = w;
 		this.s = s;
+		shouldRestoreAutosave = w.isAutoSave();
+		w.setAutoSave(false);
 		startTime = System.currentTimeMillis();
 		fifo = new ConcurrentLinkedQueue<>();
 
-		runTaskTimer(VillagePlugin.getInstance(), 1, 10);
+		runTaskTimer(VillagePlugin.getInstance(), 1, 0);
 	}
 
 	@Override
@@ -45,17 +51,25 @@ public class BlockChangeBuffer extends BukkitRunnable {
 			while ((b = fifo.poll()) != null) {
 				w.getBlockAt(b.x, b.y, b.z).setType(b.m, false);
 				i++;
-				if (i == 5000)
+				if (i == BATCH_SIZE)
 					break;
 			}
 			/*
 			 * if (i != 0) { s.sendMessage("Placing " + i + " blocks/tick"); }
 			 */
 			blockCount += i;
-			if (i != 5000 && this.done) {
+			if (i != BATCH_SIZE && this.done) {
 				s.sendMessage("Done! Placed a total of of " + blockCount + "blocks over a duration of "
 						+ ((int) (System.currentTimeMillis() - startTime)) / 1000.0 + " seconds");
 				this.cancel();
+				if (shouldRestoreAutosave) {
+					Bukkit.getScheduler().runTaskLater(VillagePlugin.getInstance(), new Runnable() {
+						@Override
+						public void run() {
+							w.setAutoSave(true);
+						}
+					}, 60);
+				}
 			}
 		}
 	}
