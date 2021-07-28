@@ -26,6 +26,8 @@ public abstract class Generator {
 		biomeMap = new int[xw][zw];
 		treeMap = new int[xw][zw];
 		waterMap = new int[xw][zw];
+		
+		long time = System.currentTimeMillis();
 
 		VillagePlugin plugin = VillagePlugin.getInstance();
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -67,6 +69,12 @@ public abstract class Generator {
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
+				s.sendMessage("Finished prefetching map. Time taken: "+ ((int)(System.currentTimeMillis()-time))/1000.0 + " seconds");
+			}
+		}, 6);
+		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+			@Override
+			public void run() {
 				Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
 					@Override
 					public void run() {
@@ -77,7 +85,7 @@ public abstract class Generator {
 					}
 				});
 			}
-		}, 6);
+		}, 7);
 	}
 
 	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,

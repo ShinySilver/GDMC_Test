@@ -141,3 +141,5 @@ world-settings:
       bamboo-modifier: 100
       sweetberry-modifier: 100
       kelp-modifier: 100
+  worldeditregentempworld:
+    verbose: false

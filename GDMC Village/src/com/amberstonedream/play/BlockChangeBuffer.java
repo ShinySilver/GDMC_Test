@@ -25,11 +25,13 @@ public class BlockChangeBuffer extends BukkitRunnable {
 	private Boolean done = false;
 	private CommandSender s;
 	private ConcurrentLinkedQueue<ScheduledBlock> fifo;
-	private int blockCount = 0, tickCount = 0;
+	private int blockCount = 0;
+	private long startTime;
 
 	public BlockChangeBuffer(World w, CommandSender s) {
 		this.w = w;
 		this.s = s;
+		startTime = System.currentTimeMillis();
 		fifo = new ConcurrentLinkedQueue<>();
 
 		runTaskTimer(VillagePlugin.getInstance(), 1, 10);
@@ -38,7 +40,6 @@ public class BlockChangeBuffer extends BukkitRunnable {
 	@Override
 	public void run() {
 		ScheduledBlock b;
-		tickCount += 1;
 		int i = 0;
 		synchronized (this.done) {
 			while ((b = fifo.poll()) != null) {
@@ -47,13 +48,13 @@ public class BlockChangeBuffer extends BukkitRunnable {
 				if (i == 5000)
 					break;
 			}
-			if (i != 0) {
-				s.sendMessage("Placing " + i + " blocks/tick");
-			}
+			/*
+			 * if (i != 0) { s.sendMessage("Placing " + i + " blocks/tick"); }
+			 */
 			blockCount += i;
 			if (i != 5000 && this.done) {
-				s.sendMessage(
-						"Done! Placed a total of of " + blockCount + "blocks over a duration of " + tickCount + " ticks.");
+				s.sendMessage("Done! Placed a total of of " + blockCount + "blocks over a duration of "
+						+ ((int) (System.currentTimeMillis() - startTime)) / 1000.0 + " seconds");
 				this.cancel();
 			}
 		}
