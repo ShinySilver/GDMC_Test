@@ -1,7 +1,6 @@
 package com.amberstonedream.play;
 
 import org.bukkit.World;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.Bukkit;
@@ -13,8 +12,7 @@ public abstract class Generator {
 	private World w;
 	protected int x0, z0, xw, zw;
 
-	private int[][][] slopeMap;
-	private int[][] heightMap, biomeMap, treeMap, waterMap;
+	private int[][] heightMap, biomeMap, treeMap, waterMap, slopeMap;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
@@ -24,8 +22,8 @@ public abstract class Generator {
 		this.zw = Math.max(z0, z1) - z0;
 
 		heightMap = new int[xw][zw];
+		slopeMap = new int[xw][zw];
 		biomeMap = new int[xw][zw];
-		slopeMap = new int[2][xw][zw];
 		treeMap = new int[xw][zw];
 		waterMap = new int[xw][zw];
 
@@ -82,7 +80,7 @@ public abstract class Generator {
 		}, 6);
 	}
 
-	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][][] slopeMap, int[][] heightMap,
+	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,
 			int[][] treeMap2, int[][] waterMap2);
 
 	private int getGround(int x, int z) {
@@ -97,7 +95,7 @@ public abstract class Generator {
 
 	private int isTree(int x, int z) {
 		Block b = w.getHighestBlockAt(x, z);
-		if(b.getType().name().endsWith("LEAVES")) {
+		if (b.getType().name().endsWith("LEAVES")) {
 			return b.getY();
 		}
 		return 0;
@@ -150,15 +148,24 @@ public abstract class Generator {
 
 	}
 
-	private int[] maxHeightDiff(int x, int z) {
+	private int maxHeightDiff(int x, int z) {
 		int max = 0;
 		int min = 255;
 		for (int i = x - 3; i < x + 4; i++) {
 			for (int j = z - 3; j < z + 4; j++) {
-				break;
+				try {
+					int height = heightMap[i][j];
+					if (height < min) {
+						min = height;
+					} else if (height > max) {
+						max = height;
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					continue;
+				}
 			}
 		}
-		return null;
+		return max - min;
 	}
 
 	private void computeTreeMap() {
