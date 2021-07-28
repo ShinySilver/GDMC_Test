@@ -12,20 +12,15 @@ public class VillageGenerator extends Generator {
 
 	@Override
 	public void generateAsync(CommandSender s, BlockChangeBuffer b, int[][][] slopeMap, int[][] heightMap,
-			boolean[][] treeMap, boolean[][] waterMap) {
+			int[][] treeMap, int[][] waterMap) {
 
 		s.sendMessage("Starting the async work! Generating Terrain...");
 		Material m;
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				if (treeMap[x][z]) {
-					m = Material.LIME_STAINED_GLASS;
-				} else if (waterMap[x][z]) {
-					m = Material.LIGHT_BLUE_STAINED_GLASS;
-				} else {
-					m = Material.WHITE_STAINED_GLASS;
-				}
-				b.setBlock(x0 + x, heightMap[x][z]+50, z0 + z, m);
+				b.setBlock(x0 + x, heightMap[x][z]+50, z0 + z, Material.WHITE_TERRACOTTA);
+				b.setBlock(x0 + x, waterMap[x][z]+50, z0 + z, Material.BLUE_STAINED_GLASS);
+				b.setBlock(x0 + x, treeMap[x][z]+50, z0 + z, Material.LIME_TERRACOTTA);
 			}
 		}
 	}

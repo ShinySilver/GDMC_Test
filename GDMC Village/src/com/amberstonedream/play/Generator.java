@@ -2,6 +2,7 @@ package com.amberstonedream.play;
 
 import org.bukkit.World;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -13,8 +14,7 @@ public abstract class Generator {
 	protected int x0, z0, xw, zw;
 
 	private int[][][] slopeMap;
-	private int[][] heightMap, biomeMap;
-	private boolean[][] treeMap, waterMap;
+	private int[][] heightMap, biomeMap, treeMap, waterMap;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
@@ -26,8 +26,8 @@ public abstract class Generator {
 		heightMap = new int[xw][zw];
 		biomeMap = new int[xw][zw];
 		slopeMap = new int[2][xw][zw];
-		treeMap = new boolean[xw][zw];
-		waterMap = new boolean[xw][zw];
+		treeMap = new int[xw][zw];
+		waterMap = new int[xw][zw];
 
 		VillagePlugin plugin = VillagePlugin.getInstance();
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -83,7 +83,7 @@ public abstract class Generator {
 	}
 
 	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][][] slopeMap, int[][] heightMap,
-			boolean[][] treeMap, boolean[][] waterMap);
+			int[][] treeMap2, int[][] waterMap2);
 
 	private int getGround(int x, int z) {
 		Material m;
@@ -95,20 +95,24 @@ public abstract class Generator {
 		return 0;
 	}
 
-	private boolean isTree(int x, int z) {
-		return w.getHighestBlockAt(x, z).getType().name().endsWith("LEAVES");
+	private int isTree(int x, int z) {
+		Block b = w.getHighestBlockAt(x, z);
+		if(b.getType().name().endsWith("LEAVES")) {
+			return b.getY();
+		}
+		return 0;
 	}
 
-	private boolean isWater(int x, int z) {
+	private int isWater(int x, int z) {
 		Material m;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0; y--) {
 			m = w.getBlockAt(x, y, z).getType();
 			if (m == Material.WATER)
-				return true;
+				return y;
 			if (m.isBlock() && m.isOccluding() && !m.isFlammable())
-				return false;
+				return 0;
 		}
-		return false;
+		return 0;
 	}
 
 	private void computeHeightMap() {
