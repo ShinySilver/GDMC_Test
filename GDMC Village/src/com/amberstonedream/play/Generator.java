@@ -171,6 +171,24 @@ public abstract class Generator {
 		return 0;
 	}
 
+	private int maxHeightDiff(int x, int z, int[][] heightMap) {
+		int max = 0;
+		int min = 255;
+		for (int i = x - 3; i < x + 4; i++) {
+			for (int j = z - 3; j < z + 4; j++) {
+				if (i < 0 || i >= heightMap.length || j < 0 || j >= heightMap[0].length)
+					continue;
+				int height = heightMap[i][j];
+				if (height < min) {
+					min = height;
+				} else if (height > max) {
+					max = height;
+				}
+			}
+		}
+		return max - min;
+	}
+
 	private void computeHeightMap() {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
@@ -204,26 +222,6 @@ public abstract class Generator {
 			}
 		}
 
-	}
-
-	private int maxHeightDiff(int x, int z, int[][] heightMap) {
-		int max = 0;
-		int min = 255;
-		for (int i = x - 3; i < x + 4; i++) {
-			for (int j = z - 3; j < z + 4; j++) {
-				try {
-					int height = heightMap[i][j];
-					if (height < min) {
-						min = height;
-					} else if (height > max) {
-						max = height;
-					}
-				} catch (ArrayIndexOutOfBoundsException e) {
-					continue;
-				}
-			}
-		}
-		return max - min;
 	}
 
 	private void computeTreeMap() {
