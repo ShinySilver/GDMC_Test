@@ -12,22 +12,40 @@ public class VillageGenerator extends Generator {
 
 	@Override
 	public void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,
-			int[][] treeMap, int[][] waterMap) {
+			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap) {
 
 		s.sendMessage("Starting the async work! Generating Terrain...");
+
+		// Print layers
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				Material m = slopeMap[x][z] < 3 ? Material.WHITE_TERRACOTTA
-						: (slopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA);
-				b.setBlock(x0 + x, heightMap[x][z] + 50, z0 + z, m);
+
 				if (waterMap[x][z] != 0) {
 					b.setBlock(x0 + x, waterMap[x][z] + 50, z0 + z, Material.BLUE_STAINED_GLASS);
+					b.setBlock(x0 + x, waterMap[x][z] + 100, z0 + z, Material.BLUE_STAINED_GLASS);
 				}
+
 				if (treeMap[x][z] != 0) {
 					b.setBlock(x0 + x, treeMap[x][z] + 50, z0 + z, Material.LIME_TERRACOTTA);
+					b.setBlock(x0 + x, treeMap[x][z] + 49, z0 + z, Material.LIME_TERRACOTTA);
+					b.setBlock(x0 + x, treeMap[x][z] + 100, z0 + z, Material.LIME_TERRACOTTA);
+					b.setBlock(x0 + x, treeMap[x][z] + 99, z0 + z, Material.LIME_TERRACOTTA);
 				}
+
+				b.setBlock(x0 + x, heightMap[x][z] + 50, z0 + z,
+						slopeMap[x][z] < 3 ? Material.WHITE_TERRACOTTA
+								: (slopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
+				b.setBlock(x0 + x, heightMap[x][z] + 49, z0 + z,
+						slopeMap[x][z] < 3 ? Material.WHITE_TERRACOTTA
+								: (slopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
+
+				b.setBlock(x0 + x, terraformedMap[x][z] + 100, z0 + z,
+						terraformedSlopeMap[x][z] < 3 ? Material.WHITE_TERRACOTTA
+								: (terraformedSlopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
+				b.setBlock(x0 + x, terraformedMap[x][z] + 99, z0 + z,
+						terraformedSlopeMap[x][z] < 3 ? Material.WHITE_TERRACOTTA
+								: (terraformedSlopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
 			}
 		}
 	}
-
 }

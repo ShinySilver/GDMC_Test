@@ -12,7 +12,7 @@ public abstract class Generator {
 	private World w;
 	protected int x0, z0, xw, zw;
 
-	private int[][] heightMap, biomeMap, treeMap, waterMap, slopeMap;
+	private int[][] heightMap, biomeMap, treeMap, waterMap, slopeMap, terraformedMap, terraformedSlopeMap;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
@@ -26,24 +26,27 @@ public abstract class Generator {
 		biomeMap = new int[xw][zw];
 		treeMap = new int[xw][zw];
 		waterMap = new int[xw][zw];
-		
-		long time = System.currentTimeMillis();
+		terraformedMap = new int[xw][zw];
+		terraformedSlopeMap = new int[xw][zw];
 
+		long time = System.currentTimeMillis();
+		int targetTick = 0;
 		VillagePlugin plugin = VillagePlugin.getInstance();
+
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
 				s.sendMessage("Generating HeightMap...");
 				computeHeightMap();
 			}
-		}, 1);
+		}, targetTick++);
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
 				s.sendMessage("Generating SlopeMap...");
-				computeSlopeMap();
+				computeSlopeMap(slopeMap, heightMap);
 			}
-		}, 2);
+		}, targetTick++);
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
@@ -51,27 +54,42 @@ public abstract class Generator {
 				s.sendMessage("Generating TreeMap...");
 				computeTreeMap();
 			}
-		}, 3);
+		}, targetTick++);
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
 				s.sendMessage("Generating WaterMap...");
 				computeWaterMap();
 			}
-		}, 4);
+		}, targetTick++);
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
 				s.sendMessage("Generating BiomeMap...");
 				computeBiomeMap();
 			}
-		}, 5);
+		}, targetTick++);
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
-				s.sendMessage("Finished prefetching map. Time taken: "+ ((int)(System.currentTimeMillis()-time))/1000.0 + " seconds");
+				s.sendMessage("Generating TerraformedMap...");
+				computeTerraformedMap();
 			}
-		}, 6);
+		}, targetTick++);
+		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+			@Override
+			public void run() {
+				s.sendMessage("Generating TerraformedSlopeMap...");
+				computeSlopeMap(terraformedSlopeMap, terraformedMap);
+			}
+		}, targetTick++);
+		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+			@Override
+			public void run() {
+				s.sendMessage("Finished prefetching map. Time taken: "
+						+ ((int) (System.currentTimeMillis() - time)) / 1000.0 + " seconds");
+			}
+		}, targetTick++);
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
@@ -80,16 +98,17 @@ public abstract class Generator {
 					public void run() {
 
 						BlockChangeBuffer b = new BlockChangeBuffer(w, s);
-						generateAsync(s, b, slopeMap, heightMap, treeMap, waterMap);
+						generateAsync(s, b, slopeMap, heightMap, treeMap, waterMap, biomeMap, terraformedMap,
+								terraformedSlopeMap);
 						b.close();
 					}
 				});
 			}
-		}, 7);
+		}, targetTick++);
 	}
 
 	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,
-			int[][] treeMap2, int[][] waterMap2);
+			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap);
 
 	private int getGround(int x, int z) {
 		Material m;
@@ -97,6 +116,37 @@ public abstract class Generator {
 			m = w.getBlockAt(x, y, z).getType();
 			if (m.isBlock() && m.isOccluding() && !m.isFlammable())
 				return y;
+		}
+		return 0;
+	}
+
+	private int getCave(int x, int z) {
+		Material m;
+		for (int y = w.getHighestBlockYAt(x, z); y > 0;) {
+			m = w.getBlockAt(x, y, z).getType();
+			if (m == Material.AIR || m.isBurnable()) {
+				y--;
+			} else if (m == Material.CAVE_AIR) {
+				return y;
+			} else {
+				int highest = 0;
+				m = w.getBlockAt(x, ++y, z).getType();
+				while (m != Material.AIR) {
+					if (m == Material.CAVE_AIR) {
+						highest = y;
+					}
+					m = w.getBlockAt(x, ++y, z).getType();
+				}
+				m = w.getBlockAt(x, --y, z).getType();
+				if (m.isBurnable()) {
+					return w.getBlockAt(x - 1, y, z).getType() == Material.CAVE_AIR
+							|| w.getBlockAt(x + 1, y, z).getType() == Material.CAVE_AIR
+							|| w.getBlockAt(x, y, z - 1).getType() == Material.CAVE_AIR
+							|| w.getBlockAt(x, y, z + 1).getType() == Material.CAVE_AIR ? y : highest;
+				}
+				return highest;
+
+			}
 		}
 		return 0;
 	}
@@ -147,16 +197,16 @@ public abstract class Generator {
 	 * tmp2[x][z]; } }
 	 */
 
-	private void computeSlopeMap() {
+	private void computeSlopeMap(int[][] slopeMap, int[][] heightMap) {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				slopeMap[x][z] = maxHeightDiff(x, z);
+				slopeMap[x][z] = maxHeightDiff(x, z, heightMap);
 			}
 		}
 
 	}
 
-	private int maxHeightDiff(int x, int z) {
+	private int maxHeightDiff(int x, int z, int[][] heightMap) {
 		int max = 0;
 		int min = 255;
 		for (int i = x - 3; i < x + 4; i++) {
@@ -188,6 +238,87 @@ public abstract class Generator {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
 				waterMap[x][z] = isWater(x0 + x, z0 + z);
+			}
+		}
+	}
+
+	private void computeTerraformedMap() {
+		// Base
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				terraformedMap[x][z] = getCave(x0 + x, z0 + z);
+			}
+		}
+
+		// Erode cave layer
+		int dx, dz, criterion, current, nearbyHeight;
+		int[][] clone = new int[terraformedMap.length][terraformedMap[0].length];
+		for (int i = 0; i < 10; i++) {
+			for (int x = 1; x < xw - 1; x++) {
+				for (int z = 1; z < zw - 1; z++) {
+					nearbyHeight = 0;
+					current = terraformedMap[x][z];
+					if (current != 0) {
+						criterion = 0;
+						for (dx = -1; dx < 2; dx++) {
+							for (dz = -1; dz < 2; dz++) {
+								nearbyHeight = Math.max(nearbyHeight, heightMap[x + dx][z + dz]);
+								if (current > Math.max(terraformedMap[x + dx][z + dz], heightMap[x + dx][z + dz])) {
+									criterion++;
+								}
+							}
+						}
+						if (criterion >= 3) {
+							clone[x][z] = Math.max(current - 1, nearbyHeight - 1);
+						} else {
+							clone[x][z] = current;
+						}
+					} else {
+						clone[x][z] = 0;
+					}
+				}
+			}
+			int[][] tmp = terraformedMap;
+			terraformedMap = clone;
+			clone = tmp;
+		}
+		// Smoothen / expand cave layers
+		boolean admissible;
+		for (int i = 0; i < 3; i++) {
+			for (int x = 1; x < xw - 1; x++) {
+				for (int z = 1; z < zw - 1; z++) {
+					current = terraformedMap[x][z];
+					criterion = 0;
+					nearbyHeight = 0;
+					admissible = false;
+					for (dx = -1; dx < 2; dx++) {
+						for (dz = -1; dz < 2; dz++) {
+							if (terraformedMap[x + dx][z + dz] != 0)
+								admissible = true;
+							if (current < Math.max(terraformedMap[x + dx][z + dz], heightMap[x + dx][z + dz])) {
+								criterion++;
+								nearbyHeight = Math.max(nearbyHeight,
+										Math.max(terraformedMap[x + dx][z + dz], heightMap[x + dx][z + dz]));
+							}
+						}
+					}
+					if (admissible && criterion >= 2) {
+						clone[x][z] = nearbyHeight;
+					} else {
+						clone[x][z] = current;
+					}
+
+				}
+			}
+			int[][] tmp = terraformedMap;
+			terraformedMap = clone;
+			clone = tmp;
+		}
+
+		// Merge cave layer and heightmap
+		for (int x = 1; x < xw - 1; x++) {
+			for (int z = 1; z < zw - 1; z++) {
+				terraformedMap[x][z] = Math.max(terraformedMap[x][z], heightMap[x][z]);
 			}
 		}
 	}
