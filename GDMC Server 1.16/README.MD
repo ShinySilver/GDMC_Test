@@ -1,5 +1,5 @@
 # Requirements
-  Java (version?)
+  - Java (version?)
   - A copy of Minecraft
 
 # Install
