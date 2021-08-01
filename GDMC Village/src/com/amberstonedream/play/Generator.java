@@ -2,14 +2,11 @@ package com.amberstonedream.play;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.Orientable;
 import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.Axis;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
