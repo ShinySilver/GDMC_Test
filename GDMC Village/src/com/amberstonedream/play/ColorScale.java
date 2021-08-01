@@ -42,19 +42,19 @@ public class ColorScale {
 			if (inv) {
 				return scale[0];
 			} else {
-				return scale[len];
+				return scale[len-1];
 			}
 		} else if (value <= min_value) {
 			if (inv) {
-				return scale[len];
+				return scale[len-1];
 			} else {
 				return scale[0];
 			}
 		} else {
 			if (inv) {
-				return scale[(int) (len - (value + min_value) / (max_value - min_value) * len)];
+				return scale[(int) ((1 - (value - min_value) / (max_value - min_value)) * (len-1))];
 			} else {
-				return scale[(int) ((value + min_value) / (max_value - min_value) * len)];
+				return scale[(int) (((value - min_value) / (max_value - min_value)) * (len-1))];
 			}
 		}
 	}

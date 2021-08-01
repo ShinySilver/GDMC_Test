@@ -3,16 +3,38 @@ package com.amberstonedream.play;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 public abstract class Generator {
 
-	public static final int KERNEL_SIZE = 5;
+	private static final List<Material> NATURAL_BLOCK= Arrays.asList(new Material[] {
+		Material.STONE,
+		Material.GRASS_BLOCK,
+		Material.SAND,
+		Material.GRAVEL,
+		Material.CLAY,
+		Material.DIRT,
+		Material.PODZOL,
+		Material.COARSE_DIRT,
+		Material.ANDESITE,
+		Material.DIORITE,
+		Material.GRANITE,
+		Material.SANDSTONE,
+		Material.PUMPKIN,
+		Material.MELON,
+		Material.COAL_ORE,
+		Material.IRON_ORE
+	});
 	private World w;
 	protected int x0, z0, xw, zw;
 
 	private int[][] heightMap, biomeMap, treeMap, waterMap, slopeMap, terraformedMap, terraformedSlopeMap;
+	private Material[][] structureMap;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
@@ -28,6 +50,7 @@ public abstract class Generator {
 		waterMap = new int[xw][zw];
 		terraformedMap = new int[xw][zw];
 		terraformedSlopeMap = new int[xw][zw];
+		structureMap = new Material[xw][zw];
 
 		long time = System.currentTimeMillis();
 		int targetTick = 0;
@@ -72,6 +95,13 @@ public abstract class Generator {
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
+				s.sendMessage("Generating Ressource...");
+				computeStructureMap();
+			}
+		}, targetTick++);
+		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+			@Override
+			public void run() {
 				s.sendMessage("Generating TerraformedMap...");
 				computeTerraformedMap();
 			}
@@ -99,7 +129,7 @@ public abstract class Generator {
 
 						BlockChangeBuffer b = new BlockChangeBuffer(w, s);
 						generateAsync(s, b, slopeMap, heightMap, treeMap, waterMap, biomeMap, terraformedMap,
-								terraformedSlopeMap);
+								terraformedSlopeMap, structureMap);
 						b.close();
 					}
 				});
@@ -108,13 +138,13 @@ public abstract class Generator {
 	}
 
 	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,
-			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap);
+			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap, Material[][] structureMap);
 
 	private int getGround(int x, int z) {
 		Material m;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0; y--) {
 			m = w.getBlockAt(x, y, z).getType();
-			if (m.isBlock() && m.isOccluding() && !m.isFlammable())
+			if (m.isBlock() && m.isOccluding() && !m.isBurnable())
 				return y;
 		}
 		return 0;
@@ -238,6 +268,20 @@ public abstract class Generator {
 				waterMap[x][z] = isWater(x0 + x, z0 + z);
 			}
 		}
+	}
+	
+	private void computeStructureMap() {
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				Material m = w.getBlockAt(x0 + x, heightMap[x][z], z0 + z).getType();
+				if (NATURAL_BLOCK.contains(m)){
+					structureMap[x][z] = null;
+				} else {
+					structureMap[x][z] = m;
+				}
+			}
+		}
+		
 	}
 
 	private void computeTerraformedMap() {

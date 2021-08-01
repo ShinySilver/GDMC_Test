@@ -96,7 +96,7 @@ public class VillageGenerator extends Generator {
 			} else if (biggestLoop > 32) {
 				return output;
 			} else {
-				Bukkit.getLogger().info("size: "+output.size()+";maxloop: " + biggestLoop);
+//				Bukkit.getLogger().info("size: "+output.size()+";maxloop: " + biggestLoop);
 				return null;
 			}
 		}
@@ -104,51 +104,63 @@ public class VillageGenerator extends Generator {
 
 	@Override
 	public void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,
-			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap) {
-
-		long time = System.currentTimeMillis();
-		s.sendMessage("Starting the async work!");
+			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap,
+			Material[][] structureMap) {
+//
+//		long time = System.currentTimeMillis();
+//		s.sendMessage("Starting the async work!");
+//
+//		s.sendMessage("Generating Terrain...");
+//		for (int x = 0; x < xw; x++) {
+//			for (int z = 0; z < zw; z++) {
+//				if (waterMap[x][z] != 0) {
+//					b.setBlock(x0 + x, waterMap[x][z] + 100, z0 + z, Material.BLUE_STAINED_GLASS);
+//				}
+//				for (int layer = 0; layer < 5; layer++) {
+////					if (treeMap[x][z] != 0) {
+////						b.setBlock(x0 + x, treeMap[x][z] + 100 - layer, z0 + z, Material.LIME_TERRACOTTA);
+////					}
+//					b.setBlock(x0 + x, terraformedMap[x][z] + 100 - layer, z0 + z, terraformedSlopeMap[x][z] < 3
+//							? Material.WHITE_TERRACOTTA
+//							: (terraformedSlopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
+//				}
+//			}
+//		}
+//		s.sendMessage("Done generating terrain!");
+//
+//		s.sendMessage("Montain detection...");
+//		int[][] isRing = new int[xw][zw];
+//		int i, j, k;
+//		for (int x = 0; x < xw; x++) {
+//			for (int z = 0; z < zw; z++) {
+//				if (isRing[x][z] == 0 && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
+//					ArrayList<Integer> ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap,
+//							terraformedMap);
+//					if (ring != null) {
+//						for (int index = 0; index < ring.size(); index += 3) {
+//							i = ring.get(index);
+//							j = ring.get(index + 1);
+//							k = ring.get(index + 2);
+//							b.setBlock(x0 + i, j + 100, z0 + k, ringMaterials[j % ringMaterials.length]);
+//						}
+//					}
+//				}
+//			}
+//		}
+//		s.sendMessage("Done detecting mountain!");
+//		s.sendMessage("Done the async work! Time taken: " + ((int) (System.currentTimeMillis() - time)) / 1000.0
+//				+ " seconds");
+//		s.sendMessage("We are now waiting for the block placement to end...");
 
 		s.sendMessage("Generating Terrain...");
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				if (waterMap[x][z] != 0) {
-					b.setBlock(x0 + x, waterMap[x][z] + 100, z0 + z, Material.BLUE_STAINED_GLASS);
-				}
-				for (int layer = 0; layer < 5; layer++) {
-					if (treeMap[x][z] != 0) {
-						b.setBlock(x0 + x, treeMap[x][z] + 100 - layer, z0 + z, Material.LIME_TERRACOTTA);
-					}
-					b.setBlock(x0 + x, terraformedMap[x][z] + 100 - layer, z0 + z, terraformedSlopeMap[x][z] < 3
-							? Material.WHITE_TERRACOTTA
-							: (terraformedSlopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
+				b.setBlock(x0 + x, heightMap[x][z] + 1, z0 + z,
+						structureMap[x][z] == null ? Material.WHITE_STAINED_GLASS : Material.RED_STAINED_GLASS);
+				if (structureMap[x][z] != null) {
+					s.sendMessage("Block at pos (" + x + ", " + heightMap[x][z] + ", " + z+") is not a natural block, it's a " + structureMap[x][z].toString());
 				}
 			}
 		}
-		s.sendMessage("Done generating terrain!");
-
-		s.sendMessage("Montain detection...");
-		int[][] isRing = new int[xw][zw];
-		int i, j, k;
-		for (int x = 0; x < xw; x++) {
-			for (int z = 0; z < zw; z++) {
-				if (isRing[x][z] == 0 && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
-					ArrayList<Integer> ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap,
-							terraformedMap);
-					if (ring != null) {
-						for (int index = 0; index < ring.size(); index += 3) {
-							i = ring.get(index);
-							j = ring.get(index + 1);
-							k = ring.get(index + 2);
-							b.setBlock(x0 + i, j + 100, z0 + k, ringMaterials[j % ringMaterials.length]);
-						}
-					}
-				}
-			}
-		}
-		s.sendMessage("Done detecting mountain!");
-		s.sendMessage("Done the async work! Time taken: " + ((int) (System.currentTimeMillis() - time)) / 1000.0
-				+ " seconds");
-		s.sendMessage("We are now waiting for the block placement to end...");
 	}
 }
