@@ -3,7 +3,6 @@ package com.amberstonedream.play;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -95,10 +94,8 @@ public class VillageGenerator extends Generator {
 				z = current.z;
 			} else if (biggestLoop > 32) {
 				return output;
-			} else {
-				Bukkit.getLogger().info("size: "+output.size()+";maxloop: " + biggestLoop);
-				return null;
 			}
+			return null;
 		}
 	}
 
