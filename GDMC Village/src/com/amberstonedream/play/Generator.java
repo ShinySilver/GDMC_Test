@@ -5,8 +5,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 
-import net.minecraft.server.v1_16_R3.BlockCryingObsidian;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -282,6 +280,7 @@ public abstract class Generator {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void populateCityMapWithVanillaStructures() {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
