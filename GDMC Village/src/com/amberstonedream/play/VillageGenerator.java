@@ -10,9 +10,6 @@ import com.google.common.primitives.Ints;
 
 public class VillageGenerator extends Generator {
 
-	private static final Material[] ringMaterials = new Material[] { Material.PINK_CONCRETE, Material.BLUE_CONCRETE,
-			Material.LIME_CONCRETE, Material.YELLOW_CONCRETE, Material.ORANGE_CONCRETE, Material.RED_CONCRETE };
-
 	private class Backtrace {
 		int x, z, rank;
 		Backtrace previous;
@@ -138,7 +135,7 @@ public class VillageGenerator extends Generator {
 		}
 		s.sendMessage("Done queuing the drawings of the feature maps!");
 
-		s.sendMessage("Montain detection...");
+		s.sendMessage("Ring search...");
 		boolean[][] explored = new boolean[xw][zw];
 		int i, j, k;
 		for (int x = 0; x < xw; x++) {
@@ -151,14 +148,24 @@ public class VillageGenerator extends Generator {
 							i = loop[index];
 							j = loop[index + 1];
 							k = loop[index + 2];
-							b.setBlock(x0 + i, j + 100, z0 + k, ringMaterials[j % ringMaterials.length]);
+							if (Config.DEBUG_RINGS) {
+								b.setBlock(x0 + i, j + 100, z0 + k,
+										Config.RAINBOW_MATERIALS[j % Config.RAINBOW_MATERIALS.length]);
+							}
 						}
 					}
 				}
 			}
 		}
-		s.sendMessage("Done detecting mountain!");
-		
+		s.sendMessage("Done searching ring!");
+		s.sendMessage("Mountain top search...");
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				// Giving up
+			}
+		}
+		s.sendMessage("Done searching mountain!");
+
 		s.sendMessage("Done the async work! Time taken: " + ((int) (System.currentTimeMillis() - time)) / 1000.0
 				+ " seconds");
 		s.sendMessage("We are now waiting for the block placement to end...");
