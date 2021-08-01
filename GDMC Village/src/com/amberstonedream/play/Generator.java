@@ -12,24 +12,10 @@ import org.bukkit.Material;
 
 public abstract class Generator {
 
-	private static final List<Material> NATURAL_BLOCK= Arrays.asList(new Material[] {
-		Material.STONE,
-		Material.GRASS_BLOCK,
-		Material.SAND,
-		Material.GRAVEL,
-		Material.CLAY,
-		Material.DIRT,
-		Material.PODZOL,
-		Material.COARSE_DIRT,
-		Material.ANDESITE,
-		Material.DIORITE,
-		Material.GRANITE,
-		Material.SANDSTONE,
-		Material.PUMPKIN,
-		Material.MELON,
-		Material.COAL_ORE,
-		Material.IRON_ORE
-	});
+	private static final List<Material> NATURAL_BLOCK = Arrays.asList(new Material[] { Material.STONE,
+			Material.GRASS_BLOCK, Material.SAND, Material.GRAVEL, Material.CLAY, Material.DIRT, Material.PODZOL,
+			Material.COARSE_DIRT, Material.ANDESITE, Material.DIORITE, Material.GRANITE, Material.SANDSTONE,
+			Material.PUMPKIN, Material.MELON, Material.COAL_ORE, Material.IRON_ORE });
 	private World w;
 	protected int x0, z0, xw, zw;
 
@@ -138,13 +124,25 @@ public abstract class Generator {
 	}
 
 	public abstract void generateAsync(CommandSender s, BlockChangeBuffer b, int[][] slopeMap, int[][] heightMap,
-			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap, Material[][] structureMap);
+			int[][] treeMap, int[][] waterMap, int[][] biomeMap, int[][] terraformedMap, int[][] terraformedSlopeMap,
+			Material[][] structureMap);
+
+	private int isTree(Block b) {
+		Material m = b.getType();
+		if (m.name().endsWith("LEAVES") || m.name().endsWith("LOG") || m.equals(Material.BAMBOO)
+				|| m.equals(Material.CACTUS)) {
+			return b.getY();
+		}
+		return 0;
+	}
 
 	private int getGround(int x, int z) {
+		Block b;
 		Material m;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0; y--) {
-			m = w.getBlockAt(x, y, z).getType();
-			if (m.isBlock() && m.isOccluding() && !m.isBurnable())
+			b = w.getBlockAt(x, y, z);
+			m = b.getType();
+			if (m.isBlock() && isTree(b) == 0 && m.isSolid() && !m.name().endsWith("GLASS"))
 				return y;
 		}
 		return 0;
@@ -177,14 +175,6 @@ public abstract class Generator {
 				return highest;
 
 			}
-		}
-		return 0;
-	}
-
-	private int isTree(int x, int z) {
-		Block b = w.getHighestBlockAt(x, z);
-		if (b.getType().name().endsWith("LEAVES")) {
-			return b.getY();
 		}
 		return 0;
 	}
@@ -257,7 +247,8 @@ public abstract class Generator {
 	private void computeTreeMap() {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				treeMap[x][z] = isTree(x0 + x, z0 + z);
+				Block b = w.getHighestBlockAt(x0 + x, z0 + z);
+				treeMap[x][z] = isTree(b);
 			}
 		}
 	}
@@ -269,19 +260,19 @@ public abstract class Generator {
 			}
 		}
 	}
-	
+
 	private void computeStructureMap() {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
 				Material m = w.getBlockAt(x0 + x, heightMap[x][z], z0 + z).getType();
-				if (NATURAL_BLOCK.contains(m)){
+				if (NATURAL_BLOCK.contains(m)) {
 					structureMap[x][z] = null;
 				} else {
 					structureMap[x][z] = m;
 				}
 			}
 		}
-		
+
 	}
 
 	private void computeTerraformedMap() {
