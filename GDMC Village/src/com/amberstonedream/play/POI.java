@@ -10,7 +10,7 @@ public enum POI {
 	JUNGLE_PYRAMID(false), // mossy cobble + high slope sometimes
 	PILLAGER_OUTPOST(true), // dark oak plank and log
 	SWAMP_HUT(true), // spruce plank and stairs
-	WOODlAND_MANSION(true), // dark oak plank with slope 0
+	WOODLAND_MANSION(true), // dark oak plank with slope 0
 	SHIPWREK(false), // IDKM, too hard (a buch of random wood of random size)
 	RUINED_PORTAL(false), // obsidian and netherrack
 	UNKOWN(true); // everything else
