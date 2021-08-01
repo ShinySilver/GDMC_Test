@@ -314,8 +314,8 @@ public abstract class Generator {
 		}
 
 		// Merge cave layer and heightmap
-		for (int x = 1; x < xw - 1; x++) {
-			for (int z = 1; z < zw - 1; z++) {
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
 				terraformedMap[x][z] = Math.max(terraformedMap[x][z], heightMap[x][z]);
 			}
 		}

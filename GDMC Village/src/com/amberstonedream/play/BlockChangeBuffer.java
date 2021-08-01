@@ -22,22 +22,21 @@ public class BlockChangeBuffer extends BukkitRunnable {
 		}
 	}
 
+	private long time;
 	private World w;
 	private Boolean done = false;
 	private CommandSender s;
 	private ConcurrentLinkedQueue<ScheduledBlock> fifo;
 	private int blockCount = 0;
-	private long startTime;
 	private boolean shouldRestoreAutosave;
 
-	private static final int BATCH_SIZE = 500;
+	private static final int BATCH_SIZE = 20000;
 
 	public BlockChangeBuffer(World w, CommandSender s) {
 		this.w = w;
 		this.s = s;
 		shouldRestoreAutosave = w.isAutoSave();
 		w.setAutoSave(false);
-		startTime = System.currentTimeMillis();
 		fifo = new ConcurrentLinkedQueue<>();
 
 		runTaskTimer(VillagePlugin.getInstance(), 1, 0);
@@ -59,8 +58,9 @@ public class BlockChangeBuffer extends BukkitRunnable {
 			 */
 			blockCount += i;
 			if (i != BATCH_SIZE && this.done) {
-				s.sendMessage("Done! Placed a total of of " + blockCount + "blocks over a duration of "
-						+ ((int) (System.currentTimeMillis() - startTime)) / 1000.0 + " seconds");
+				s.sendMessage(
+						"This buffer finished placing blocks " + ((int) (System.currentTimeMillis() - time)) / 1000.0
+								+ " seconds after the generation thread. It placed a total of " + blockCount + " blocks.");
 				this.cancel();
 				if (shouldRestoreAutosave) {
 					Bukkit.getScheduler().runTaskLater(VillagePlugin.getInstance(), new Runnable() {
@@ -68,7 +68,7 @@ public class BlockChangeBuffer extends BukkitRunnable {
 						public void run() {
 							w.setAutoSave(true);
 						}
-					}, 60);
+					}, 2*60*20);
 				}
 			}
 		}
@@ -77,6 +77,7 @@ public class BlockChangeBuffer extends BukkitRunnable {
 	public void close() {
 		synchronized (this.done) {
 			this.done = true;
+			this.time = System.currentTimeMillis();
 		}
 	}
 
