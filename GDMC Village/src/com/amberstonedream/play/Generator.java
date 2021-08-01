@@ -21,6 +21,7 @@ public abstract class Generator {
 
 	private int[][] heightMap, biomeMap, treeMap, waterMap, slopeMap, terraformedMap, terraformedSlopeMap;
 	private Material[][] structureMap;
+	private BlockChangeBuffer b;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
@@ -28,6 +29,7 @@ public abstract class Generator {
 		this.z0 = Math.min(z0, z1);
 		this.xw = Math.max(x0, x1) - x0;
 		this.zw = Math.max(z0, z1) - z0;
+		this.b = new BlockChangeBuffer(w, s);
 
 		heightMap = new int[xw][zw];
 		slopeMap = new int[xw][zw];
@@ -113,7 +115,7 @@ public abstract class Generator {
 					@Override
 					public void run() {
 
-						BlockChangeBuffer b = new BlockChangeBuffer(w, s);
+						
 						generateAsync(s, b, slopeMap, heightMap, treeMap, waterMap, biomeMap, terraformedMap,
 								terraformedSlopeMap, structureMap);
 						b.close();
@@ -363,5 +365,9 @@ public abstract class Generator {
 				biomeMap[x][z] = w.getBlockAt(x0 + x, 60, z0 + z).getBiome().ordinal();
 			}
 		}
+	}
+	
+	public BlockChangeBuffer getBuffer() {
+		return b;
 	}
 }
