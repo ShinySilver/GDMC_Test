@@ -122,9 +122,9 @@ public class VillageGenerator extends Generator {
 					b.setBlock(x0 + x, waterMap[x][z] + 100, z0 + z, Material.BLUE_STAINED_GLASS);
 				}
 				b.setBlock(x0 + x, heightMap[x][z] + 101, z0 + z,
-						structureMap[x][z] == null ? Material.WHITE_STAINED_GLASS : Material.RED_STAINED_GLASS);
+						structureMap[x][z] == null ? Material.AIR : Material.BLACK_STAINED_GLASS);
 				for (int layer = 0; layer < 5; layer++) {
-					if (treeMap[x][z] != 0) {
+					if (treeMap[x][z] != 0 && layer < 2) {
 						b.setBlock(x0 + x, treeMap[x][z] + 100 - layer, z0 + z, Material.LIME_TERRACOTTA);
 					}
 					b.setBlock(x0 + x, terraformedMap[x][z] + 100 - layer, z0 + z, terraformedSlopeMap[x][z] < 3
