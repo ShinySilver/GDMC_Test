@@ -7,6 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 
+import com.google.common.primitives.Ints;
+
 public class VillageGenerator extends Generator {
 
 	private static final Material[] ringMaterials = new Material[] { Material.PINK_CONCRETE, Material.BLUE_CONCRETE,
@@ -33,56 +35,68 @@ public class VillageGenerator extends Generator {
 		super(w, s, x0, z0, x1, z1);
 	}
 
-	private ArrayList<Integer> spreadRing(BlockChangeBuffer b, int x, int y, int z, int[][] slopes, int[][] heights) {
+	private int[][] spreadRing(BlockChangeBuffer b, int x, int y, int z, int[][] slopes, int[][] heights,
+			boolean[][] explored) {
 
 		Backtrace current = new Backtrace(x, z, null);
-		int biggestLoop = 0;
 		int[][] noBacktrack = new int[xw][zw];
-		ArrayList<Integer> output = new ArrayList<Integer>();
+		ArrayList<int[]> output = new ArrayList<int[]>();
 
-		int dx, dz;
+		int dx, dz, d;
+		int[] dxv = new int[] { 1, 0, -1, 0, 1, 1, -1, -1 };
+		int[] dzv = new int[] { 0, 1, 0, -1, -1, 1, 1, -1 };
 
 		outer: // there's now way I'll be using 4 if/break blocks.
 		for (;;) {
 
 			// Trying to find another block to spread to.
-			for (dx = -1; dx <= 1; dx++) {
-				for (dz = -1; dz <= 1; dz++) {
+			for (d = 0; d < 8; d++) {
+				dx = dxv[d];
+				dz = dzv[d];
 
-					// Skipping blocks out of scope, lower than the target or with low slope
-					if (x + dx < 0 || x + dx >= xw || z + dz < 0 || z + dz >= zw || heights[x + dx][z + dz] < y
-							|| slopes[x + dx][z + dz] < 3 || (dx == 0 && dz == 0)) {
-						continue;
+				// Skipping blocks out of scope, lower than the target or with low slope
+				if (x + dx < 0 || x + dx >= xw || z + dz < 0 || z + dz >= zw || heights[x + dx][z + dz] < y
+						|| slopes[x + dx][z + dz] < 3) {
+					continue;
+				}
+
+				// Saving and skipping when we find a loop
+				if (noBacktrack[x + dx][z + dz] != 0) {
+					if (current.rank - noBacktrack[x + dx][z + dz] > 32) {
+						ArrayList<Integer> loop = new ArrayList<>();
+						for (Backtrace pointer = current; pointer.rank >= noBacktrack[x + dx][z
+								+ dz]; pointer = pointer.previous) {
+							loop.addAll(Arrays.asList(new Integer[] { pointer.x, y, pointer.z }));
+						}
+						assert loop.size() == current.rank - noBacktrack[x + dx][z + dz];
+						output.add(Ints.toArray(loop));
 					}
+					continue;
+				}
 
-					// Saving and skipping when we find a loop
-					if (noBacktrack[x + dx][z + dz] != 0) {
-						// Big approximation
-						biggestLoop = Math.max(biggestLoop, Math.abs(current.rank - noBacktrack[x + dx][z + dz]));
-						continue;
-					}
+				// Checking if this block can see the air, ie. if we are digging into the
+				// mountain
+				for (int i = -1; i <= 1; i++) {
+					for (int j = -1; j <= 1; j++) {
+						// Skipping blocks out of scope
+						if (x + dx + i < 0 || x + dx + i >= xw || z + dz + j < 0 || z + dz + j >= zw) {
+							continue;
+						}
 
-					// Checking if this block can see the air, ie. if we are digging into the
-					// mountain
-					for (int i = -1; i <= 1; i++) {
-						for (int j = -1; j <= 1; j++) {
-							// Skipping blocks out of scope
-							if (x + dx + i < 0 || x + dx + i >= xw || z + dz + j < 0 || z + dz + j >= zw) {
-								continue;
+						// Is this block 'air'?
+						if (heights[x + dx + i][z + dz + j] < y) {
+							// If yes, the block is valid.
+							current = new Backtrace(x + dx, z + dz, current);
+							noBacktrack[x + dx][z + dz] = current.rank;
+							if (heights[x + dx][z + dz] == y) {
+								explored[x + dx][z + dz] = true;
 							}
-
-							// Is this block 'air'?
-							if (heights[x + dx + i][z + dz + j] < y) {
-								// If yes, the block is valid.
-								current = new Backtrace(x + dx, z + dz, current);
-								noBacktrack[x + dx][z + dz] = current.rank;
-								output.addAll(Arrays.asList(new Integer[] { x + dx, y, z + dz }));
-								x = x + dx;
-								z = z + dz;
-								continue outer;
-							}
+							x = x + dx;
+							z = z + dz;
+							continue outer;
 						}
 					}
+
 				}
 			}
 
@@ -92,10 +106,8 @@ public class VillageGenerator extends Generator {
 				current = current.previous;
 				x = current.x;
 				z = current.z;
-			} else if (biggestLoop > 32) {
-				return output;
 			}
-			return null;
+			return output.toArray(new int[0][0]);
 		}
 	}
 
@@ -106,7 +118,7 @@ public class VillageGenerator extends Generator {
 		long time = System.currentTimeMillis();
 		s.sendMessage("Starting the async work!");
 
-		s.sendMessage("Generating Terrain...");
+		s.sendMessage("Queuing the drawing of all blocks in feature maps...");
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
 				if (waterMap[x][z] != 0) {
@@ -125,18 +137,18 @@ public class VillageGenerator extends Generator {
 		s.sendMessage("Done generating terrain!");
 
 		s.sendMessage("Montain detection...");
-		int[][] isRing = new int[xw][zw];
+		boolean[][] explored = new boolean[xw][zw];
 		int i, j, k;
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				if (isRing[x][z] == 0 && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
-					ArrayList<Integer> ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap,
-							terraformedMap);
-					if (ring != null) {
-						for (int index = 0; index < ring.size(); index += 3) {
-							i = ring.get(index);
-							j = ring.get(index + 1);
-							k = ring.get(index + 2);
+				if (!explored[x][z] && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
+					int[][] ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap, terraformedMap,
+							explored);
+					for (int[] loop : ring) {
+						for (int index = 0; index < loop.length; index += 3) {
+							i = loop[index];
+							j = loop[index + 1];
+							k = loop[index + 2];
 							b.setBlock(x0 + i, j + 100, z0 + k, ringMaterials[j % ringMaterials.length]);
 						}
 					}
