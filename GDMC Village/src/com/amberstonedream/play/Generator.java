@@ -2,6 +2,7 @@ package com.amberstonedream.play;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;
