@@ -115,56 +115,61 @@ public class VillageGenerator extends Generator {
 		long time = System.currentTimeMillis();
 		s.sendMessage("Starting the async work!");
 
-		s.sendMessage("Queuing the drawing of all blocks in feature maps...");
-		for (int x = 0; x < xw; x++) {
-			for (int z = 0; z < zw; z++) {
-				if (waterMap[x][z] != 0) {
-					b.setBlock(x0 + x, waterMap[x][z] + 100, z0 + z, Material.BLUE_STAINED_GLASS);
-				}
-				b.setBlock(x0 + x, heightMap[x][z] + 101, z0 + z,
-						structureMap[x][z] == null ? Material.AIR : Material.BLACK_STAINED_GLASS);
-				for (int layer = 0; layer < 5; layer++) {
-					if (treeMap[x][z] != 0 && layer < 2) {
-						b.setBlock(x0 + x, treeMap[x][z] + 100 - layer, z0 + z, Material.LIME_TERRACOTTA);
+		if (Config.ENABLE_DEBUG) {
+			s.sendMessage("Queuing the drawing of all blocks in feature maps...");
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					if (waterMap[x][z] != 0) {
+						b.setBlock(x0 + x, waterMap[x][z] + 100, z0 + z, Material.BLUE_STAINED_GLASS);
 					}
-					b.setBlock(x0 + x, terraformedMap[x][z] + 100 - layer, z0 + z, terraformedSlopeMap[x][z] < 3
-							? Material.WHITE_TERRACOTTA
-							: (terraformedSlopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA));
+					b.setBlock(x0 + x, heightMap[x][z] + 101, z0 + z,
+							structureMap[x][z] == null ? Material.AIR : Material.BLACK_STAINED_GLASS);
+					for (int layer = 0; layer < 5; layer++) {
+						if (treeMap[x][z] != 0) {
+							b.setBlock(x0 + x, treeMap[x][z] + 100 - layer, z0 + z, Material.LIME_TERRACOTTA);
+						}
+						b.setBlock(x0 + x, terraformedMap[x][z] + 100 - layer, z0 + z,
+								terraformedSlopeMap[x][z] < 3 ? Material.WHITE_TERRACOTTA
+										: (terraformedSlopeMap[x][z] < 8 ? Material.YELLOW_TERRACOTTA
+												: Material.RED_TERRACOTTA));
+					}
 				}
 			}
+			s.sendMessage("Done queuing the drawings of the feature maps!");
 		}
-		s.sendMessage("Done queuing the drawings of the feature maps!");
 
-		s.sendMessage("Ring search...");
-		boolean[][] explored = new boolean[xw][zw];
-		int i, j, k;
-		for (int x = 0; x < xw; x++) {
-			for (int z = 0; z < zw; z++) {
-				if (!explored[x][z] && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
-					int[][] ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap, terraformedMap,
-							explored);
-					for (int[] loop : ring) {
-						for (int index = 0; index < loop.length; index += 3) {
-							i = loop[index];
-							j = loop[index + 1];
-							k = loop[index + 2];
-							if (Config.DEBUG_RINGS) {
-								b.setBlock(x0 + i, j + 100, z0 + k,
-										Config.RAINBOW_MATERIALS[j % Config.RAINBOW_MATERIALS.length]);
+		if (Config.COMPUTE_EXPERIMENTAL_MOUNTAINS) {
+			s.sendMessage("Ring search...");
+			boolean[][] explored = new boolean[xw][zw];
+			int i, j, k;
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					if (!explored[x][z] && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
+						int[][] ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap, terraformedMap,
+								explored);
+						for (int[] loop : ring) {
+							for (int index = 0; index < loop.length; index += 3) {
+								i = loop[index];
+								j = loop[index + 1];
+								k = loop[index + 2];
+								if (Config.ENABLE_DEBUG) {
+									b.setBlock(x0 + i, j + 100, z0 + k,
+											Config.RAINBOW_MATERIALS[j % Config.RAINBOW_MATERIALS.length]);
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-		s.sendMessage("Done searching ring!");
-		s.sendMessage("Mountain top search...");
-		for (int x = 0; x < xw; x++) {
-			for (int z = 0; z < zw; z++) {
-				// Giving up
+			s.sendMessage("Done searching ring!");
+			s.sendMessage("Mountain top search...");
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					// Giving up
+				}
 			}
+			s.sendMessage("Done searching mountain!");
 		}
-		s.sendMessage("Done searching mountain!");
 
 		s.sendMessage("Done the async work! Time taken: " + ((int) (System.currentTimeMillis() - time)) / 1000.0
 				+ " seconds");
