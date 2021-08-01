@@ -2,7 +2,10 @@ package com.amberstonedream.play;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
+
+import net.minecraft.server.v1_16_R3.BlockCryingObsidian;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +25,7 @@ public abstract class Generator {
 	private int[][] heightMap, biomeMap, treeMap, waterMap, slopeMap, terraformedMap, terraformedSlopeMap;
 	private Material[][] structureMap;
 	private BlockChangeBuffer b;
+	private POI[][] cityMap;
 
 	public Generator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		this.w = w;
@@ -39,6 +43,7 @@ public abstract class Generator {
 		terraformedMap = new int[xw][zw];
 		terraformedSlopeMap = new int[xw][zw];
 		structureMap = new Material[xw][zw];
+		cityMap = new POI[xw][zw];
 
 		long time = System.currentTimeMillis();
 		int targetTick = 0;
@@ -275,7 +280,74 @@ public abstract class Generator {
 				}
 			}
 		}
+	}
 
+	private void populateCityMapWithVanillaStructures() {
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				if (structureMap[x][z] == null) {
+					cityMap[x][z] = null;
+				} else {
+					switch (structureMap[x][z]) {
+					//TODO Structures left : Villager house, desert_well, JUNGLE_PYRAMID, WOODlAND_MANSION
+					case BLUE_TERRACOTTA:
+						// check side for good pattern then convert radius around to desert_pyramide
+						Block b = w.getBlockAt(x, heightMap[x][z], z);
+						if (b.getRelative(BlockFace.NORTH_EAST) == b.getRelative(BlockFace.NORTH_WEST)
+								&& b.getRelative(BlockFace.NORTH_EAST) == b.getRelative(BlockFace.SOUTH_EAST)
+								&& b.getRelative(BlockFace.NORTH_EAST) == b.getRelative(BlockFace.SOUTH_WEST)
+								&& b.getRelative(BlockFace.NORTH_EAST).getType() == Material.ORANGE_TERRACOTTA) {
+							for (int i = -10; i < 10; i++) {
+								for (int j = -10; j < 10; j++) {
+									if (x + i < 0 || x + i >= heightMap.length || z + j < 0
+											|| z + j >= heightMap[0].length)
+										continue;
+									cityMap[x + i][z + j] = POI.DESERT_PYRAMID;
+								}
+							}
+						}
+						break;
+					case SNOW_BLOCK:
+						cityMap[x][z] = POI.IGLOO;
+						break;
+					case DARK_OAK_PLANKS:
+						// Several subcase here : woodland mansion or pillager outpost (we can diff with
+						// the fence_post)
+						break;
+					case DARK_OAK_FENCE:
+						for (int i = -25; i < 25; i++) {
+							for (int j = -25; j < 25; j++) {
+								if (x + i < 0 || x + i >= heightMap.length || z + j < 0 || z + j >= heightMap[0].length)
+									continue;
+								cityMap[x + i][z + j] = POI.PILLAGER_OUTPOST;
+							}
+						}
+					case SPRUCE_PLANKS:
+					case SPRUCE_STAIRS:
+						cityMap[x][z] = POI.SWAMP_HUT;
+						break;
+					case OBSIDIAN:
+					case CRYING_OBSIDIAN:
+					case NETHERRACK:
+						for (int i = -1; i < 1; i++) {
+							for (int j = -1; j < 1; j++) {
+								if (x + i < 0 || x + i >= heightMap.length || z + j < 0 || z + j >= heightMap[0].length)
+									continue;
+								cityMap[x][z] = POI.RUINED_PORTAL;
+							}
+						}
+						break;
+					case GRASS_PATH:
+					case SMOOTH_SANDSTONE:
+						cityMap[x][z] = POI.PATH;
+						break;
+
+					default:
+						cityMap[x][z] = POI.UNKOWN;
+					}
+				}
+			}
+		}
 	}
 
 	private void computeTerraformedMap() {
