@@ -2,13 +2,11 @@ package com.amberstonedream.play;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Orientable;
 import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.Axis;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
@@ -131,9 +129,9 @@ public abstract class Generator {
 
 	private int isTree(Block b) {
 		Material m = b.getType();
-		if (m.name().endsWith("LEAVES")
-				|| (m.name().endsWith("LOG") && ((Orientable) b.getBlockData()).getAxis() == Axis.Y)
-				|| m.equals(Material.BAMBOO) || m.equals(Material.CACTUS)) {
+		if (m.name().endsWith("LEAVES") || m.name().endsWith("LOG") || m == Material.BROWN_MUSHROOM_BLOCK
+				|| m == Material.RED_MUSHROOM_BLOCK || m == Material.MUSHROOM_STEM || m == Material.BAMBOO
+				|| m == Material.CACTUS) {
 			return b.getY();
 		}
 		return 0;
