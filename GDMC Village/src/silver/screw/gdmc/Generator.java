@@ -1,4 +1,4 @@
-package com.amberstonedream.play;
+package silver.screw.gdmc;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;

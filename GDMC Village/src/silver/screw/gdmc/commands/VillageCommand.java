@@ -1,4 +1,4 @@
-package com.amberstonedream.play.commands;
+package silver.screw.gdmc.commands;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,8 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import com.amberstonedream.play.BlockChangeBuffer;
-import com.amberstonedream.play.VillageGenerator;
+import silver.screw.gdmc.BlockChangeBuffer;
+import silver.screw.gdmc.VillageGenerator;
 
 public class VillageCommand implements CommandExecutor, TabCompleter {
 	private HashMap<String, BlockChangeBuffer> map;

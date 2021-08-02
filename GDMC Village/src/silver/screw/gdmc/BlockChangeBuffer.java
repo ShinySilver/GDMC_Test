@@ -1,4 +1,4 @@
-package com.amberstonedream.play;
+package silver.screw.gdmc;
 
 import java.util.Stack;
 import java.util.concurrent.ConcurrentLinkedQueue;

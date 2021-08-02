@@ -1,4 +1,4 @@
-package com.amberstonedream.play;
+package silver.screw.gdmc;
 
 public enum POI {
 	HOUSE(true), // plank, log, sandstone

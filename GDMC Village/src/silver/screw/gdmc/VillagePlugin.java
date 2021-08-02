@@ -1,10 +1,10 @@
-package com.amberstonedream.play;
+package silver.screw.gdmc;
 
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.amberstonedream.play.commands.VillageCommand;
+import silver.screw.gdmc.commands.VillageCommand;
 
 /** 
  * TODO: Add mountain filling

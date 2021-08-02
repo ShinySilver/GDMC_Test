@@ -1,5 +1,5 @@
 name: Village
-main: com.amberstonedream.play.VillagePlugin
+main: silver.screw.gdmc.VillagePlugin
 version: 1.0
 api-version: 1.16
 commands:
