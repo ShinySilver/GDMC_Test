@@ -107,7 +107,7 @@ public abstract class Generator {
 		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 			@Override
 			public void run() {
-				s.sendMessage("Finished prefetching map. Time taken: "
+				s.sendMessage("Finished generating sync feature maps. Time taken: "
 						+ ((int) (System.currentTimeMillis() - time)) / 1000.0 + " seconds");
 			}
 		}, targetTick++);
@@ -142,7 +142,7 @@ public abstract class Generator {
 		return 0;
 	}
 
-	private int getGround(int x, int z) {
+	private int getGroundY(int x, int z) {
 		Block b;
 		Material m;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0; y--) {
@@ -154,7 +154,7 @@ public abstract class Generator {
 		return 0;
 	}
 
-	private int getCave(int x, int z) {
+	private int getCaveY(int x, int z) {
 		Material m;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0;) {
 			m = w.getBlockAt(x, y, z).getType();
@@ -185,7 +185,7 @@ public abstract class Generator {
 		return 0;
 	}
 
-	private int isWater(int x, int z) {
+	private int getWaterY(int x, int z) {
 		Material m;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0; y--) {
 			m = w.getBlockAt(x, y, z).getType();
@@ -218,28 +218,10 @@ public abstract class Generator {
 	private void computeHeightMap() {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				heightMap[x][z] = getGround(x0 + x, z0 + z);
+				heightMap[x][z] = getGroundY(x0 + x, z0 + z);
 			}
 		}
 	}
-
-	/*
-	 * private int[][] createKernel(int w, int h) { assert (w != 0 && h != 0);
-	 * assert (w == 1 || h == 1); int[][] kernel = new int[w][h]; if (w == 1) { for
-	 * (int i = 0; i < w; i++) { if (i == w / 2) { kernel[i][1] = 0; } else if (i <
-	 * w / 2) { kernel[i][1] = -1; } else if (i > w / 2) { kernel[i][1] = 1; } }
-	 * return kernel; } else if (h == 1) { for (int j = 0; j < h; j++) { if (j == h
-	 * / 2) { kernel[1][j] = 0; } else if (j < h / 2) { kernel[1][j] = -1; } else if
-	 * (j > h / 2) { kernel[1][j] = 1; } } return kernel; } return null; }
-	 */
-	/*
-	 * int[][] tmp1, tmp2; tmp1 = Convolution.convolution2DPadded(heightMap, xw, zw,
-	 * createKernel(KERNEL_SIZE, 1), KERNEL_SIZE, 1); tmp2 =
-	 * Convolution.convolution2DPadded(heightMap, xw, zw, createKernel(1,
-	 * KERNEL_SIZE), 1, KERNEL_SIZE); for (int x = 0; x < xw; x++) { for (int z = 0;
-	 * z < zw; z++) { slopeMap[x][z][0] = tmp1[x][z]; slopeMap[x][z][1] =
-	 * tmp2[x][z]; } }
-	 */
 
 	private void computeSlopeMap(int[][] slopeMap, int[][] heightMap) {
 		for (int x = 0; x < xw; x++) {
@@ -262,7 +244,7 @@ public abstract class Generator {
 	private void computeWaterMap() {
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				waterMap[x][z] = isWater(x0 + x, z0 + z);
+				waterMap[x][z] = getWaterY(x0 + x, z0 + z);
 			}
 		}
 	}
@@ -353,7 +335,7 @@ public abstract class Generator {
 		// Base
 		for (int x = 0; x < xw; x++) {
 			for (int z = 0; z < zw; z++) {
-				terraformedMap[x][z] = getCave(x0 + x, z0 + z);
+				terraformedMap[x][z] = getCaveY(x0 + x, z0 + z);
 			}
 		}
 
@@ -389,6 +371,7 @@ public abstract class Generator {
 			terraformedMap = clone;
 			clone = tmp;
 		}
+		
 		// Smoothen / expand cave layers
 		boolean admissible;
 		for (int i = 0; i < 3; i++) {

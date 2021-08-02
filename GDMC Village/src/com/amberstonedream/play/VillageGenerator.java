@@ -116,7 +116,7 @@ public class VillageGenerator extends Generator {
 		s.sendMessage("Starting the async work!");
 
 		if (Config.ENABLE_DEBUG) {
-			s.sendMessage("Queuing the drawing of all blocks in feature maps...");
+			s.sendMessage("Debug is enabled. Queuing the drawing of all blocks in feature maps...");
 			for (int x = 0; x < xw; x++) {
 				for (int z = 0; z < zw; z++) {
 					if (waterMap[x][z] != 0) {
@@ -139,7 +139,7 @@ public class VillageGenerator extends Generator {
 		}
 
 		if (Config.COMPUTE_EXPERIMENTAL_MOUNTAINS) {
-			s.sendMessage("Ring search...");
+			s.sendMessage("Experimental Mountain Search enabled. Ring search...");
 			boolean[][] explored = new boolean[xw][zw];
 			int i, j, k;
 			for (int x = 0; x < xw; x++) {
@@ -161,14 +161,14 @@ public class VillageGenerator extends Generator {
 					}
 				}
 			}
-			s.sendMessage("Done searching ring!");
+			s.sendMessage("Done searching rings!");
 			s.sendMessage("Mountain top search...");
 			for (int x = 0; x < xw; x++) {
 				for (int z = 0; z < zw; z++) {
 					// Giving up
 				}
 			}
-			s.sendMessage("Done searching mountain!");
+			s.sendMessage("Done searching mountains!");
 		}
 
 		s.sendMessage("Done the async work! Time taken: " + ((int) (System.currentTimeMillis() - time)) / 1000.0
