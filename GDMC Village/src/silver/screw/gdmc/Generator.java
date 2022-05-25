@@ -3,7 +3,11 @@ package silver.screw.gdmc;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.command.CommandSender;
+
+import silver.screw.gdmc.utils.BlockChangeBuffer;
+import silver.screw.gdmc.utils.POI;
 
 import java.util.Arrays;
 import java.util.List;
@@ -118,7 +122,6 @@ public abstract class Generator {
 					@Override
 					public void run() {
 
-						
 						generateAsync(s, b, slopeMap, heightMap, treeMap, waterMap, biomeMap, terraformedMap,
 								terraformedSlopeMap, structureMap);
 						b.close();
@@ -187,9 +190,11 @@ public abstract class Generator {
 
 	private int getWaterY(int x, int z) {
 		Material m;
+		Block b;
 		for (int y = w.getHighestBlockYAt(x, z); y > 0; y--) {
-			m = w.getBlockAt(x, y, z).getType();
-			if (m == Material.WATER)
+			b = w.getBlockAt(x, y, z);
+			if (b.getBlockData() instanceof Waterlogged && ((Waterlogged) b.getBlockData()).isWaterlogged()
+					|| (m = b.getType()) == Material.WATER)
 				return y;
 			if (m.isBlock() && m.isOccluding() && !m.isFlammable())
 				return 0;
@@ -270,7 +275,8 @@ public abstract class Generator {
 					cityMap[x][z] = null;
 				} else {
 					switch (structureMap[x][z]) {
-					//TODO Structures left : Villager house, desert_well, JUNGLE_PYRAMID, WOODlAND_MANSION
+					// TODO Structures left : Villager house, desert_well, JUNGLE_PYRAMID,
+					// WOODlAND_MANSION
 					case BLUE_TERRACOTTA:
 						// check side for good pattern then convert radius around to desert_pyramide
 						Block b = w.getBlockAt(x, heightMap[x][z], z);
@@ -371,7 +377,7 @@ public abstract class Generator {
 			terraformedMap = clone;
 			clone = tmp;
 		}
-		
+
 		// Smoothen / expand cave layers
 		boolean admissible;
 		for (int i = 0; i < 3; i++) {
@@ -420,7 +426,7 @@ public abstract class Generator {
 			}
 		}
 	}
-	
+
 	public BlockChangeBuffer getBuffer() {
 		return b;
 	}

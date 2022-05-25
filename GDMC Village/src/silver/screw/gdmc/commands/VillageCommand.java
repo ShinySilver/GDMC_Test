@@ -11,8 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import silver.screw.gdmc.BlockChangeBuffer;
 import silver.screw.gdmc.VillageGenerator;
+import silver.screw.gdmc.utils.BlockChangeBuffer;
 
 public class VillageCommand implements CommandExecutor, TabCompleter {
 	private HashMap<String, BlockChangeBuffer> map;

@@ -1,4 +1,4 @@
-package silver.screw.gdmc;
+package silver.screw.gdmc.utils;
 
 import org.bukkit.Material;
 

@@ -2,13 +2,20 @@ package silver.screw.gdmc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.Stack;
 
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.command.CommandSender;
 import com.google.common.primitives.Ints;
 
+import silver.screw.gdmc.utils.BlockChangeBuffer;
+
 public class VillageGenerator extends Generator {
+
+	public final Random random;
 
 	private class Backtrace {
 		int x, z, rank;
@@ -29,10 +36,190 @@ public class VillageGenerator extends Generator {
 
 	public VillageGenerator(World w, CommandSender s, int x0, int z0, int x1, int z1) {
 		super(w, s, x0, z0, x1, z1);
+		random = new Random();
 	}
 
-	private int[][] spreadRing(BlockChangeBuffer b, int x, int y, int z, int[][] slopes, int[][] heights,
-			boolean[][] explored) {
+	@SuppressWarnings("unused")
+	private void apply(int[][] objectiveHeightmap, int[][] modifiedHeightmap, int radius, boolean[][] mask) {
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+
+			}
+		}
+	}
+
+	private boolean[][] dilate(boolean[][] src, int count) {
+		int dx, dz, score;
+		boolean[][] tmp, backup = src, copy = new boolean[src.length][src[0].length];
+		for (int i = 0; i < count; i++) {
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					score = 0;
+					outer: for (dx = -1; dx <= 1; dx++) {
+						for (dz = -1; dz <= 1; dz++) {
+							if (x + dx < 0 || x + dx >= xw || z + dz < 0 || z + dz >= zw) {
+								continue;
+							}
+							if (src[x + dx][z + dz]) {
+								if (score == 2) {
+									copy[x][z] = true;
+									break outer;
+								}
+								score++;
+							}
+						}
+					}
+				}
+			}
+			tmp = src;
+			src = copy;
+			copy = tmp;
+		}
+
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				backup[x][z] = src[x][z];
+			}
+		}
+		return src;
+	}
+
+	@SuppressWarnings("unused")
+	private boolean[][] erode(boolean[][] src, int count) {
+
+		int dx, dz, score;
+		boolean[][] copy = new boolean[src.length][src[0].length];
+
+		for (int i = 0; i < count; i++) {
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					copy[x][z] = src[x][z];
+				}
+			}
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					if (!src[x][z])
+						continue;
+					score = 0;
+					outer: for (dx = -1; dx <= 1; dx++) {
+						for (dz = -1; dz <= 1; dz++) {
+							if (x + dx < 0 || x + dx >= xw || z + dz < 0 || z + dz >= zw) {
+								continue;
+							}
+							if (!src[x + dx][z + dz]) {
+								if (score == 3) {
+									copy[x][z] = false;
+									break outer;
+								}
+								score++;
+							}
+						}
+					}
+				}
+			}
+			for (int x = 0; x < xw; x++) {
+				for (int z = 0; z < zw; z++) {
+					src[x][z] = copy[x][z];
+				}
+			}
+		}
+		return src;
+	}
+
+	private int[][] getRivers(int[][] biomeMap, int[][] waterMap) {
+		Stack<Integer> stack = new Stack<>();
+		boolean[][] riverMap = new boolean[xw][zw], extendedRiverMap = new boolean[xw][zw];
+		int dx, dz, xI, zI;
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				if (!Biome.values()[biomeMap[x][z]].name().contains("OCEAN")
+						&& !Biome.values()[biomeMap[x][z]].name().contains("RIVER")) {
+					continue;
+				}
+				riverMap[x][z] = true;
+				if (extendedRiverMap[x][z]) {
+					continue;
+				}
+				xI = x;
+				zI = z;
+				extendedRiverMap[x][z] = true;
+
+				for (;;) { // Water connected to river/ocean
+					for (dx = -1; dx <= 1; dx++) {
+						for (dz = -1; dz <= 1; dz++) {
+							if (xI + dx < 0 || xI + dx >= xw || zI + dz < 0 || zI + dz >= zw) {
+								continue;
+							}
+							if (!extendedRiverMap[xI + dx][zI + dz] && waterMap[xI + dx][zI + dz] == 62) {
+								stack.add(xI + dx);
+								stack.add(zI + dz);
+								extendedRiverMap[xI + dx][zI + dz] = true;
+							}
+						}
+					}
+
+					if (!stack.isEmpty()) {
+						zI = stack.pop();
+						xI = stack.pop();
+					} else {
+						break;
+					}
+				}
+
+			}
+		}
+		dilate(riverMap, 6);
+		erode(riverMap, 5);
+
+		ArrayList<Integer> currentTier = new ArrayList<>();
+		ArrayList<Integer> nextTier = new ArrayList<>();
+		int[][] betterRiverMap = new int[xw][zw];
+		int dist = 0;
+
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				riverMap[x][z] |= extendedRiverMap[x][z];
+
+				if (riverMap[x][z]) {
+					betterRiverMap[x][z] = dist;
+					currentTier.add(x);
+					currentTier.add(z);
+				} else {
+					betterRiverMap[x][z] = -1;
+				}
+			}
+		}
+
+		do {
+			dist += 1;
+
+			int x, z;
+			for (int i = 0; i < currentTier.size(); i += 2) {
+				x = currentTier.get(i);
+				z = currentTier.get(i + 1);
+
+				for (dx = -1; dx <= 1; dx++) {
+					for (dz = -1; dz <= 1; dz++) {
+						if (x + dx < 0 || x + dx >= xw || z + dz < 0 || z + dz >= zw
+								|| Math.abs(dx) + Math.abs(dz) != 1) {
+							continue;
+						}
+						if (betterRiverMap[x + dx][z + dz] == -1) {
+							betterRiverMap[x + dx][z + dz] = dist;
+							nextTier.add(x + dx);
+							nextTier.add(z + dz);
+						}
+					}
+				}
+			}
+			currentTier = nextTier;
+			nextTier = new ArrayList<>();
+		} while (!currentTier.isEmpty());
+
+		return betterRiverMap;
+	}
+
+	private int[][] spreadRing(int x, int y, int z, int[][] slopes, int[][] heights, boolean[][] explored) {
 
 		Backtrace current = new Backtrace(x, z, null);
 		int[][] noBacktrack = new int[xw][zw];
@@ -145,7 +332,7 @@ public class VillageGenerator extends Generator {
 			for (int x = 0; x < xw; x++) {
 				for (int z = 0; z < zw; z++) {
 					if (!explored[x][z] && terraformedSlopeMap[x][z] > 2 && terraformedMap[x][z] >= 62) {
-						int[][] ring = spreadRing(b, x, terraformedMap[x][z], z, terraformedSlopeMap, terraformedMap,
+						int[][] ring = spreadRing(x, terraformedMap[x][z], z, terraformedSlopeMap, terraformedMap,
 								explored);
 						for (int[] loop : ring) {
 							for (int index = 0; index < loop.length; index += 3) {
@@ -170,6 +357,29 @@ public class VillageGenerator extends Generator {
 			}
 			s.sendMessage("Done searching mountains!");
 		}
+
+		s.sendMessage("Mapping rivers & oceans...");
+		int[][] riverMap = getRivers(biomeMap, waterMap);
+		int y;
+		for (int x = 0; x < xw; x++) {
+			for (int z = 0; z < zw; z++) {
+				if (riverMap[x][z] == 0) {
+					b.setBlock(x0 + x, 62, z0 + z, Material.WATER);
+					y = 63;
+					while (y <= heightMap[x][z] || y <= treeMap[x][z]) {
+						b.setBlock(x0 + x, y, z0 + z, Material.AIR);
+						y++;
+					}
+				} else if (riverMap[x][z] > 0) {
+					y = 62 + riverMap[x][z];
+					while (y <= heightMap[x][z] || y <= treeMap[x][z]) {
+						b.setBlock(x0 + x, y, z0 + z, Material.AIR);
+						y++;
+					}
+				}
+			}
+		}
+		s.sendMessage("Done mapping rivers & oceans!");
 
 		s.sendMessage("Done the async work! Time taken: " + ((int) (System.currentTimeMillis() - time)) / 1000.0
 				+ " seconds");

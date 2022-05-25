@@ -1,4 +1,4 @@
-package silver.screw.gdmc;
+package silver.screw.gdmc.utils;
 
 public enum POI {
 	HOUSE(true), // plank, log, sandstone

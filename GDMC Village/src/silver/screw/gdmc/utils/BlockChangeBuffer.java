@@ -1,4 +1,4 @@
-package silver.screw.gdmc;
+package silver.screw.gdmc.utils;
 
 import java.util.Stack;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -10,6 +10,8 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+
+import silver.screw.gdmc.VillagePlugin;
 
 public class BlockChangeBuffer extends BukkitRunnable {
 
